@@ -3,7 +3,7 @@
 
 Prometheus configuration using Docker Service Discovery.
 
-Automatically discovers containers to scrap based on labels on the same host.
+Automatically discovers containers to scrape based on labels on the same host.
 
 ---
 
