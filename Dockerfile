@@ -6,6 +6,6 @@ USER root
 RUN chmod +x /entrypoint.sh && \
     chown -R 1000:1000 /prometheus /etc/prometheus
 
-USER 1000
+USER 1000:1000
 
 ENTRYPOINT ["/entrypoint.sh"]
