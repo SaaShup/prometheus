@@ -16,8 +16,10 @@ scrape_configs:
         replacement: "$1"
 
       - source_labels: [__meta_docker_container_name]
+        regex: "/(.+)"
         target_label: container
-      
+        replacement: "$1"
+
       - source_labels: [__meta_docker_container_label_prometheus_path]
         regex: "(.+)"
         target_label: __metrics_path__
@@ -32,13 +34,20 @@ scrape_configs:
         regex: "true"
         action: keep
 
-      - source_labels: [__meta_docker_container_label_prometheus_address]
+      - source_labels:
+          [
+            __meta_docker_network_ip,
+            __meta_docker_container_label_prometheus_address,
+          ]
+        regex: "(.+);[^:]+:(\\d+)"
+        replacement: "$1:$2"
         target_label: __address__
-        replacement: "$1"
 
       - source_labels: [__meta_docker_container_name]
+        regex: "/(.+)"
         target_label: container
-      
+        replacement: "$1"
+
       - source_labels: [__meta_docker_container_label_prometheus_path]
         regex: "(.+)"
         target_label: __metrics_path__
