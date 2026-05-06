@@ -32,6 +32,17 @@ http://localhost:9090
 
 ---
 
+## Configuration
+
+The container supports the following environment variables:
+
+- `AGENT_BASIC_AUTH_USER`: Username for basic authentication (default: none)
+- `AGENT_BASIC_AUTH_PASSWORD`: Password for basic authentication (default: none)
+- `PROM_ROUTE_PREFIX`: Route prefix for Prometheus web UI (default: /)
+- `PROM_EXTERNAL_URL`: External URL for Prometheus (default: none)
+
+---
+
 ## How it works
 
 Prometheus reads Docker containers via:
@@ -54,6 +65,13 @@ Each container must define:
 prometheus_port=<host>:<port>
 ```
 
+Additionally, you can specify a custom metrics path using the label:
+
+```
+prometheus_path=/custom-metrics
+```
+by default is /metrics.
+
 ---
 
 ## Example
@@ -68,5 +86,4 @@ labels:
 
 ## Notes
 
-* Targets must expose `/metrics`
-* Format must be Prometheus (text, not JSON)
+* Metrics path format must be Prometheus (text, not JSON)
