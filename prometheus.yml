@@ -34,14 +34,9 @@ scrape_configs:
         regex: "true"
         action: keep
 
-      - source_labels:
-          [
-            __meta_docker_network_ip,
-            __meta_docker_container_label_prometheus_address,
-          ]
-        regex: "(.+);[^:]+:(\\d+)"
-        replacement: "$1:$2"
+      - source_labels: [__meta_docker_container_label_prometheus_address]
         target_label: __address__
+        replacement: "$1"
 
       - source_labels: [__meta_docker_container_name]
         regex: "/(.+)"
