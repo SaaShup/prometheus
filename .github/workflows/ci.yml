@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build image + config check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate Prometheus config syntax
+        run: >-
+          docker run --rm -v "$PWD/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+          --entrypoint promtool prom/prometheus:v3.5.0
+          check config /etc/prometheus/prometheus.yml
+
+      - name: Build Docker image
+        run: docker build -t prometheus:ci .
+
+      - name: Smoke-test image (starts, config loads, web UI ready)
+        run: |
+          docker run -d --name prom-ci \
+            -e AGENT_BASIC_AUTH_USER=ci \
+            -e AGENT_BASIC_AUTH_PASSWORD=ci \
+            -p 9090:9090 \
+            prometheus:ci
+
+          code=000
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" localhost:9090/-/ready || echo 000)
+            if [ "$code" = "200" ]; then echo "Prometheus ready (HTTP $code)"; break; fi
+            sleep 1
+          done
+          test "$code" = "200" || { echo "::error::image smoke test failed: not ready"; docker logs prom-ci; exit 1; }
+
+          curl -sf localhost:9090/-/healthy >/dev/null
+
+          # Confirm the scrape jobs shipped in prometheus.yml were actually loaded.
+          config=$(curl -sf localhost:9090/api/v1/status/config)
+          for job in docker netbox-docker-agent-http netbox-docker-agent-https; do
+            echo "$config" | grep -qE "job_name:[[:space:]]*\"?${job}\"?" \
+              || { echo "::error::job $job missing from loaded config"; echo "$config"; exit 1; }
+          done
+          echo "Smoke test passed"
+
+      - name: Container logs (always)
+        if: always()
+        run: docker logs prom-ci 2>/dev/null || true
