@@ -51,6 +51,10 @@ Prometheus reads Docker containers via:
 /var/run/docker.sock
 ```
 
+The container runs as a non-root user but the entrypoint detects the GID
+owning the mounted `docker.sock` at startup and joins that group automatically,
+so no `--group-add` flag is needed regardless of the host's `docker` group GID.
+
 Only containers with:
 
 ```
