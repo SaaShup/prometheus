@@ -4,8 +4,8 @@ COPY entrypoint.sh /entrypoint.sh
 
 USER root
 RUN chmod +x /entrypoint.sh && \
-    chown -R 1000:1000 /prometheus /etc/prometheus
-
-USER 1000:1000
+    chown -R 1000:1000 /prometheus /etc/prometheus && \
+    addgroup -g 1000 prometheus && \
+    adduser -D -H -u 1000 -G prometheus prometheus
 
 ENTRYPOINT ["/entrypoint.sh"]
